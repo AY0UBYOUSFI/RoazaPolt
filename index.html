@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./images/favicon.jpg" type="image/x-icon">
+    <title>RozaPolt</title>
+    <meta name="description" content="this site is for get data and posts from random api , named RoZapot">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Honk&family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/dist/output.css">
+    <link rel="stylesheet" href="./style/custome_style.css">
+    <script src="./axios_fetch.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.11.0/axios.min.js" integrity="sha512-h9644v03pHqrIHThkvXhB2PJ8zf5E9IyVnrSfZg8Yj8k4RsO4zldcQc4Bi9iVLUCCsqNY0b4WXVV4UB+wbWENA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
+    <script src="./node_modules/axios/dist/axios.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/4.1.13/lib.min.js" integrity="sha512-LBqpfYKfymp3VEoHOQharES5j6UyXzUP0Td5jk5j1Ekm9tsbAoGUi5VaGA+0gdAlqKvAUb+7iFBe6qQQ7Jwk0Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+ -->
+<script>
+
+//global var: 
+let token ="";
+let user = {};
+let baseURL = "https://tarmeezacademy.com/api/v1";
+//****************************************fetching part *************************
+//login request : 
+async function Login(username,password) {
+  show_loader();
+axios.post(`${baseURL}/login`, {
+    "username": username,
+    "password": password
+  })
+  .then(function (response) {
+    show_loader(false);
+  console.log(response);
+   new Promise((res,ref)=>{
+    loading_gif();
+    setTimeout(() => {
+      res();
+    }, 3000);
+  }).then(()=>{
+        get_token(response);
+        check_login(JSON.stringify(response.data.user));
+        location.reload();
+  },()=>{
+  })
+
+
+
+  })
+  .catch(function (error) {
+    console.log(error.response.data.message);
+    // alert(error.response.data.message);
+    my_bad_alert(error.response.data.message);
+
+      }).finally(()=>{
+                show_loader(false);
+      }) 
+}
+function checkinfo(){
+let username = String(document.getElementById("email").value);
+let password = String(document.getElementById("password").value);
+Login(username,password);
+}
+
+
+
+
+
+//***********************register new user **************************
+
+
+
+
+function show_register_modal(){
+
+  document.querySelector("#dialog-2").style.display = "inline";
+
+}
+
+
+async function register(){
+
+
+//get data from the form 
+  let username = document.getElementById("register-username").value;
+  let password = document.getElementById("register-password").value;
+  let image = document.getElementById("dropzone-file").files[0];
+  let name = document.getElementById("register-name").value;
+  let email = document.getElementById("register-email").value;
+
+
+  let data = new FormData();
+
+  data.append("username",String(username));
+  data.append("password",String(password));
+  data.append("image",image);
+  data.append("name",String(name));
+  data.append("email",String(email));
+
+
+
+show_loader();
+
+ await axios.post(`${baseURL}/register`,
+data
+, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  }
+).then(function (response) {
+  show_loader(false)
+    //handle success
+    my_good_alert("register succesfully .");
+
+    console.log(response)
+   unshow("dialog-2");
+  })
+  .catch(function (response) {
+    //handle error
+    my_bad_alert(`error : ${response.response.data.message}`);
+    console.log(response);
+    unshow("dialog-2");
+    
+  }).finally(()=>{
+    show_loader(false);
+  });
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+function unshow(element){
+  element = String(element);
+  document.getElementById(element).display.style="none";
+}
+
+
+
+//*********************************************************************
+
+
+//**********************************update post **********************
+
+
+function show_data(current_post){
+
+ current_post= JSON.parse(current_post);
+  console.log(current_post)
+ document.getElementById("update-post-title").value = current_post.title;
+ document.getElementById("update-post-body").value =  current_post.body;
+ localStorage.setItem("selected_post",String(current_post.id));
+}
+
+
+
+
+
+ function update_post(){
+
+let pid = localStorage.getItem("selected_post");
+localStorage.removeItem("selected_post");
+console.log(pid)
+  let token = localStorage.getItem("token");
+
+let title = document.getElementById("update-post-title").value;
+let body = document.getElementById("update-post-body").value;
+
+
+show_loader();
+
+ axios.put(`${baseURL}/posts/${pid}`,{
+
+  "title": String(title),
+  "body": String(body)
+
+},{
+  headers:{
+     "authorization":`Bearer ${token}`
+  }
+}).then(response=>{
+//handle success 
+show_loader(false);
+my_good_alert("update post susseccfully");
+console.log(response);
+
+}).catch(error=>{
+//handle error
+my_bad_alert(`check issue ${error}`);
+console.log(error);
+
+}).finally(()=>{
+  show_loader(false);
+});
+
+
+document.getElementById("dialog-4").style.display = "none";
+
+
+
+}
+
+
+
+
+
+
+
+
+
+//********************************************************************
+
+
+
+
+
+
+//**********************************delete post **********************
+
+
+
+
+
+async function delete_post(dp_number){
+  console.log(dp_number)
+  let token = localStorage.getItem("token");
+
+show_loader();
+await axios.delete(`${baseURL}/posts/${Number(dp_number)}`,{
+  headers:{    
+   "authorization":`Bearer ${token}`
+  }
+})
+.then(response =>{
+  show_loader(false);
+  my_good_alert("poste deleted succussfully");
+  console.log(response);
+}).catch(error=>{
+  my_bad_alert("there is problem here : ");
+  console.log(error);
+})
+
+}
+
+
+
+
+
+
+
+
+
+//********************************************************************
+
+
+
+
+//**********************************add post****************************
+
+
+async function add_post(){
+
+
+let token = localStorage.getItem("token");
+let data = new FormData();
+
+
+let postTitle = document.getElementById("post-title").value;
+let postBody = document.getElementById("post-body").value;
+let postImage = document.getElementById("post-image").files[0];
+let postTags = document.getElementById("post-tags").value;
+
+data.append("title",String(postTitle));
+data.append("body",String(postBody));
+data.append("image",postImage);
+data.append("tags",String(postTags));
+show_loader();
+ await axios.post(`${baseURL}/posts`, 
+    data
+  , {
+    headers: {
+     'Content-Type': 'multipart/form-data',
+     'authorization': `Bearer ${token}`
+    }
+}).then(response=>{
+//handle success
+show_loader(false);
+console.log(response);
+my_good_alert("post add successfully");
+
+
+
+}).catch(error=>{
+//handle error
+
+console.log(error);
+my_bad_alert(error);
+
+}).finally(()=>{
+  show_loader(false);
+})
+
+
+
+}
+
+
+
+
+
+//**********************************************************************
+
+
+
+
+
+//******************************show loader******************************
+
+
+function show_loader(showl = true){
+
+if(showl){
+  document.getElementById("loader").style.display = "block";
+}else{
+    document.getElementById("loader").style.display = "none";
+}
+
+}
+
+
+//**********************************************************************
+
+
+
+
+
+
+
+
+
+
+//**********************************show post modal ****************
+
+
+function show_add_post_modal(){
+document.getElementById("dialog-3").style.display = "block";
+}
+
+
+
+
+//******************************************************************
+
+
+//get token 
+
+function get_token(response){
+  token = response.data.token;
+  user = response.data.user;
+   localStorage.setItem("token",String(token));
+   localStorage.setItem("user",JSON.stringify(user));
+}
+
+
+
+
+
+//loading gif
+
+function loading_gif(){
+
+   let img = document.createElement("img");
+   img.src = "./images/loading.gif";
+
+  document.getElementById("loading-space").appendChild(img);
+
+   
+
+}
+
+function check_login(user_obj){
+let user_info = JSON.parse(user_obj);
+document.getElementById("register-button").style.display="none";
+document.getElementById("log-in-button").style.display="none";
+document.getElementById("dialog").style.display="none";
+document.getElementById("profile").style.display="inline";
+document.getElementById("log-out").style.display="inline";
+// let linkText = document.createTextNode("Path");
+// h1.appendChild(linkText);
+
+
+
+//styling : 
+
+document.getElementById("log-out").style.backgroundColor="white";
+document.getElementById("log-out").style.color = "black";
+document.getElementById("log-out").style.borderRadius = "2px"; 
+document.getElementById("log-out").style.padding = "2px";
+ document.getElementById("log-out").style.cursor="pointer";
+
+
+document.getElementById("profile").style.backgroundColor="orange";
+document.getElementById("profile").style.color = "white";
+document.getElementById("profile").style.borderRadius = "2px"; 
+document.getElementById("profile").style.padding = "2px"; 
+ document.getElementById("profile").style.cursor="pointer";
+ document.getElementById("profile").innerHTML = user_info.username;
+ document.getElementById("profile-image").style.display = "inline";
+if(user_info.profile_image!=null){
+  document.getElementById("profile-image").src = user_info.profile_image;
+  document.getElementById("profile-image-link").href=`profile.html?userId=${myId()}`;
+}
+document.getElementById("add-post").style.display = "block";
+
+ my_good_alert("success login");
+
+// location.reload();
+}
+
+
+//log_out 
+
+
+function log_out(){
+if(localStorage.getItem("token")&&localStorage.getItem("user")){
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    document.getElementById("profile").style.display="none";
+    document.getElementById("log-out").style.display="none";
+
+}else{
+my_bad_alert("you are alredy log out");
+
+}
+   location.reload();
+
+
+}
+
+
+
+function myId(){
+let a = localStorage.getItem("user");
+a = JSON.parse(a);
+
+
+return a.id;
+
+
+}
+
+
+//getUP 
+
+
+window.addEventListener("load",()=>{
+
+  if(localStorage.getItem("token")&&localStorage.getItem("user")){
+    check_login(localStorage.getItem("user"));
+  }else {
+      my_good_alert("session is finished");
+  }
+    
+});
+
+
+
+
+//*********************************************************************************
+let max_data=16;
+function getTags(tags_array){
+
+  let result = ``;
+  let i = 0 ;
+  while( i < tags_array.length){
+
+    result +=` <a href="#" class="text-blue-600 dark:text-blue-400 hover:underline">#${tags_array[i]}</a> . tags number : ${tags_array.length}`;
+
+    i++;
+  
+}
+
+//59461|hZEa4OtcpE5zZsuJOR8SYsCa8z8aUeI0bvxqRcMP0017eb8f
+
+
+result+= `<a href="#" class="text-blue-600 dark:text-blue-400 hover:underline">#tags</a>`;
+
+return result;
+}
+
+
+
+
+
+//***************************show posts ****************************
+
+const limit = 20;
+let currentpage = -1;
+let lastPage ;
+
+
+async function fetching_data(page){
+  page = page + 1;
+  show_loader();
+return await new Promise((res,rej)=>{
+
+ axios.get(`${baseURL}/posts?limit=${limit}&page=${page}`)
+.then(function (response) {
+    // handle success
+    show_loader(false);
+    res(response);
+    lastPage = response.data.meta.last_page;
+
+  })
+  .catch(function (error) {
+    // handle error
+    console.log(error);
+  }).finally(()=>{
+     show_loader(false);
+  });
+});
+}
+
+
+
+
+
+
+window.addEventListener("scroll",()=>{
+
+  if(window.innerHeight + window.pageYOffset >= document.body.scrollHeight){
+
+ currentpage = currentpage +1;       
+fetching_data(currentpage).then((response)=>{
+  if(currentpage<lastPage)
+    display(response);
+  else
+     console.log("the end");
+    console.log("currenpage : "+currentpage+" last page : "+lastPage );
+});
+
+    
+  }
+});
+
+
+
+
+function display(response){
+console.log(response)
+let posts = response.data.data;
+let i = 0;
+let myId = localStorage.getItem("user");
+myId = JSON.parse(myId);
+
+
+for(const post of posts){
+  i++;
+  // if(i==max_data)
+  // break;
+
+
+
+
+  document.getElementById('page-content').innerHTML += `
+      <div id="cart" class="bg-white rounded-lg shadow-sm max-w-xl w-full">
+      <div class="p-4">
+        <div class="flex justify-between items-start m-b-1">
+          <div class="flex items-center space-x-3">
+           <a href='profile.html?userId=${post.author.id}'>
+               <img class="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                 src="${post.author.profile_image}"
+                 alt="User Avatar">
+                 </a>
+            <div class="text-sm min-w-0">
+              <a id="username" href="#" class="font-semibold text-primary hover:underline hover:text-blue-700 dark:hover:text-blue-400">
+              ${post.author.username}
+              </a>
+              <p class="text-xs text-secondary truncate">
+                ${post.author.name} | ${post.author.email}
+              </p>
+              <p class="text-xs text-secondary flex items-center">
+              ${post.created_at} • Edited • 
+                <svg class="w-3 h-3 text-secondary" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M0 8a8 8 0 1 0 16 0A8 8 0 0 0 0 8zm8-6.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zM6 8a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V8zm5.472.088a1.144 1.144 0 0 0-1.944-.972 1.144 1.144 0 1 0 1.944.972zM4.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg>
+              </p>
+            </div>
+          </div>
+          <button aria-label="More options" class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full p-1.5 -mt-1 -mr-1.5">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"></path></svg>
+          </button>
+        </div>
+        <div class="text-sm text-primary mb-3 mt-3 break-words">
+            <p id="body-data"><b>${post.title}</b> , ${post.body}
+              
+              ${getTags(post.tags)}
+           
+        </div>
+
+        <div class="mb-3 -mx-4 sm:mx-0 sm:rounded-lg overflow-hidden">
+             <img src="${post.image}"
+                 alt="Post media content" class="w-full object-cover">
+        </div>
+
+        <div style="height:30px;" class="flex items-center justify-between text-xs text-secondary mb-2">
+            <div class="flex items-center space-x-1">
+                <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path xmlns="http://www.w3.org/2000/svg" d="M19.2412 4.48567C19.4084 4.45613 19.9017 4.38771 20.2409 4.80362C20.58 5.21954 20.4137 5.68895 20.3511 5.84684C20.2781 6.03091 20.1551 6.24781 20.0394 6.45186L14.2096 16.7397C13.7833 17.492 13.4223 18.1292 13.0837 18.5655C12.7444 19.0026 12.2569 19.4636 11.5438 19.4106C10.8307 19.3576 10.4168 18.8296 10.1458 18.3471C9.87545 17.8656 9.61259 17.1821 9.30222 16.375L8.57848 14.4932C8.50596 14.3047 8.46511 14.1997 8.42906 14.1229C8.41301 14.0887 8.40261 14.0706 8.39685 14.0614C8.39411 14.0571 8.39245 14.0548 8.39182 14.0539L8.39101 14.0529L8.39007 14.052L8.38679 14.0492L8.38312 14.0463C8.37454 14.0397 8.35748 14.0276 8.325 14.0083C8.25203 13.965 8.1515 13.9143 7.97081 13.8239L6.98271 13.3299C6.10066 12.8889 5.36544 12.5213 4.86354 12.1752C4.37714 11.8398 3.83065 11.3379 3.88886 10.5671C3.94707 9.7963 4.56273 9.38216 5.09398 9.12362C5.64217 8.85684 6.42424 8.60385 7.36252 8.30033L18.5857 4.66928C18.8089 4.59697 19.0462 4.52011 19.2412 4.48567Z" fill="#000000"/></svg>
+                <span class="hover:text-blue-600 hover:underline cursor-pointer">235</span>
+            </div>
+            <div class="space-x-2">
+                <span class="hover:text-blue-600 hover:underline cursor-pointer">${post.comments_count} comments</span>
+                <span>•</span>
+                <span class="hover:text-blue-600 hover:underline cursor-pointer">18 reposts</span>
+            </div>
+        </div>
+
+        <div style="height:40px;" class="border-t pt-2 flex justify-around text-sm font-medium text-gray-600 dark:text-gray-300">
+            <button onclick="show_post(${post.id})" aria-label="Like" class="flex items-center space-x-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded w-full justify-center transition-colors duration-150">
+              <i class="fa-solid fa-eye"></i>
+                <span>show post</span>
+            </button>
+            <button aria-label="Comment" class="flex items-center space-x-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded w-full justify-center transition-colors duration-150">
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 011.037-.443 48.282 48.282 0 005.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
+                <span>Comment</span>
+            </button>
+             <button onclick='delete_post(${post.id})' id="mypostdelete${post.id}" aria-label="Repost" class="flex items-center space-x-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded w-full justify-center transition-colors duration-150">
+              <i class="fa-solid fa-trash"></i>
+                <span>Delete</span>
+            </button>
+             <button onclick="document.getElementById('dialog-4').style.display='block';show_data(decodeURIComponent('${encodeURIComponent(JSON.stringify(post))}'))"  id="mypostupdate${post.id}" aria-label="Send" class="flex items-center space-x-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded w-full justify-center transition-colors duration-150">
+               <i class="fa-solid fa-pen-to-square"></i>
+              
+               <span>Update</span>
+            </button>
+        </div>
+      </div>
+    </div>
+  `;
+  if(post.author.id != myId.id){
+  document.getElementById(`mypostdelete${post.id}`).style.display = "none";
+  document.getElementById(`mypostupdate${post.id}`).style.display = "none";
+}
+}
+}
+
+
+function my_good_alert(alert_message){
+    new Promise((res,rej)=>{
+      document.getElementById("my_good_alert").style.display = "flex";
+      document.getElementById("good_alert_content").innerHTML =alert_message;
+      setTimeout(() => {
+      res();
+      }, 5000);
+    }).then(res=>{
+       document.getElementById("my_good_alert").style.display = "none"
+    });  
+}
+
+function my_bad_alert(alert_message){
+    new Promise((res,rej)=>{
+      document.getElementById("my_bad_alert").style.display = "flex";
+      document.getElementById("bad_alert_content").innerHTML =alert_message;
+      setTimeout(() => {
+      res();
+      }, 5000);
+    }).then(res=>{
+       document.getElementById("my_bad_alert").style.display = "none"
+    });  
+}
+
+//********************************show post***************************
+
+
+function show_post(post_id){
+
+let newUrl = `./post.html?postId=${post_id}`;
+
+window.location = newUrl;
+
+}
+
+
+
+
+//********************************************************************
+
+</script>
+</head>
+<body class="bg-white scroll-smooth">
+
+
+
+
+
+<div id="my_bad_alert" class="flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+    <span class="font-medium"></span><i class="fa-solid fa-circle-info"></i>&nbsp; <p id="bad_alert_content">error</p>
+</div>
+
+<div id="my_good_alert" class="flex items-center p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
+    <span class="font-medium"></span><i class="fa-solid fa-circle-info"></i>&nbsp;<p id="good_alert_content">Success alert!</p>
+</div>
+
+
+
+
+<el-dialog>
+   <dialog id="dialog-4" aria-labelledby="dialog-title""> 
+    <!--class="fixed inset-0 size-auto overflow-y-auto bg-transparent backdrop:bg-transparent" -->
+    <div id="dialog-content" tabindex="0"">
+      <el-dialog-panel>
+        <div >
+          <div >
+            <div>
+
+            </div>
+            <div >
+              <h3 style="text-align:center;color: black; font-size: 30px;" id="dialog-title"><span style="font-family:Pacifico;color: darkblue;">U</span>pdate<span style="font-family:Pacifico;color: darkblue;">P</span>ost</h3> </div>
+        </div>
+        </div>
+        <div >
+        <div style="text-align: left;"><i class="fa-solid fa-user"></i>title : </div>
+        <input placeholder="&nbsp;&nbsp;&nbsp;update title" type="text" name="title" id="update-post-title" class="bg-amber-50 rounded-sm mb-2">
+        <br>
+        <div style="margin-top: 20px; text-align: left;"><i class="fa-solid fa-lock"></i>body : </div>
+        <textarea name="update-post-body" id="update-post-body" cols="30" rows="10"></textarea>
+
+                <br>
+        
+        
+        <div id="buttons-modal" class="flex flex-row">
+          <button type="button" style="background: transparent;color: black;" id="submit" class="w-full mt-3 inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-green-200 inset-ring inset-ring-white/5 hover:bg-white/20 sm:mt-0 sm:w-auto" onclick="update_post()">update</button>
+        <button type="button" command="close" commandfor="dialog" class="mt-3 inline-flex w-full justify-center rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-red-500 inset-ring inset-ring-white/5 hover:bg-white/20 sm:mt-0 sm:w-auto" onclick="document.getElementById('dialog-4').style.display='none'" >Cancel</button>
+        </div>
+        </div>
+        <div id="loading-space"></div>
+      </el-dialog-panel>
+    </div>
+  </dialog>
+</el-dialog>
+
+
+
+
+
+
+
+<el-dialog>
+   <dialog id="dialog-3" aria-labelledby="dialog-title""> 
+    <!--class="fixed inset-0 size-auto overflow-y-auto bg-transparent backdrop:bg-transparent" -->
+    <div id="dialog-content" tabindex="0"">
+      <el-dialog-panel>
+        <div >
+          <div >
+            <div>
+
+            </div>
+            <div >
+              <h3 style="text-align:center;color: black; font-size: 30px;" id="dialog-title"><span style="font-family:Pacifico;color: darkblue;">A</span>dd<span style="font-family:Pacifico;color: darkblue;">P</span>ost</h3> </div>
+        </div>
+        </div>
+        <div >
+        <div style="text-align: left;"><i class="fa-solid fa-user"></i>title : </div>
+        <input placeholder="&nbsp;&nbsp;&nbsp;input post title" type="text" name="title" id="post-title" class="bg-amber-50 rounded-sm mb-2">
+        <br>
+        <div style="margin-top: 20px; text-align: left;"><i class="fa-solid fa-lock"></i>body : </div>
+        <textarea name="post-body" id="post-body" cols="30" rows="10"></textarea>
+
+                <br>
+   <div class="flex items-center justify-center w-full " style="margin-top: 15px;">
+    <label for="post-image" style="background-color: white;" class="flex flex-col items-center justify-center w-full h-20 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-50 mt-1">
+        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+            <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+            </svg>
+            <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+        </div>
+        <input id="post-image" type="file" class="hidden" accept="image/*"/>
+    </label>
+</div> 
+        
+                <br>
+        <div style="margin-top: 20px; text-align: left;"><i class="fa-solid fa-user-tie"></i>tags : </div>
+        <input placeholder="&nbsp;&nbsp;&nbsp;input post tags : " type="text" name="post-tags" id="post-tags" class="bg-amber-50 rounded-sm">
+        
+<br><br>
+        
+        
+        <div id="buttons-modal" class="flex flex-row">
+          <button type="button" style="background: transparent;color: black;" id="submit" class="w-full mt-3 inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-green-200 inset-ring inset-ring-white/5 hover:bg-white/20 sm:mt-0 sm:w-auto" onclick="add_post()">submit</button>
+        <button type="button" command="close" commandfor="dialog" class="mt-3 inline-flex w-full justify-center rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-red-500 inset-ring inset-ring-white/5 hover:bg-white/20 sm:mt-0 sm:w-auto" onclick="document.getElementById('dialog-3').style.display='none'" >Cancel</button>
+        </div>
+        </div>
+        <div id="loading-space"></div>
+      </el-dialog-panel>
+    </div>
+  </dialog>
+</el-dialog>
+
+
+
+
+
+
+
+<el-dialog>
+   <dialog id="dialog-2" aria-labelledby="dialog-title""> 
+    <!--class="fixed inset-0 size-auto overflow-y-auto bg-transparent backdrop:bg-transparent" -->
+    <div id="dialog-content" tabindex="0"">
+      <el-dialog-panel>
+        <div >
+          <div >
+            <div>
+
+            </div>
+            <div >
+              <h3 style="text-align:center;color: black; font-size: 30px;" id="dialog-title"><span style="font-family:Pacifico;color: darkblue;">R</span>egister</h3> </div>
+        </div>
+        </div>
+        <div >
+        <div style="text-align: left;"><i class="fa-solid fa-user"></i>Username : </div>
+        <input placeholder="&nbsp;&nbsp;&nbsp;input your username" type="text" name="username" id="register-username" class="bg-amber-50 rounded-sm mb-2">
+        <br>
+        <div style="margin-top: 20px; text-align: left;"><i class="fa-solid fa-lock"></i>Password : </div>
+        <input placeholder="&nbsp;&nbsp;&nbsp;input your password" type="password" name="password" id="register-password" class="bg-amber-50 rounded-sm">
+
+                <br>
+   <div class="flex items-center justify-center w-full " style="margin-top: 15px;">
+    <label for="dropzone-file" style="background-color: white;" class="flex flex-col items-center justify-center w-full h-20 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-50 mt-1">
+        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+            <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+            </svg>
+            <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+        </div>
+        <input id="dropzone-file" type="file" class="hidden" accept="image/*"/>
+    </label>
+</div> 
+        
+                <br>
+        <div style="margin-top: 20px; text-align: left;"><i class="fa-solid fa-user-tie"></i>name : </div>
+        <input placeholder="&nbsp;&nbsp;&nbsp;input your name : " type="text" name="name" id="register-name" class="bg-amber-50 rounded-sm">
+        
+<br><br>
+        
+        <div style="text-align: left;"><i class="fa-solid fa-envelope"></i>Email : </div>
+        <input placeholder="&nbsp;&nbsp;&nbsp;input your email" type="email" name="email" id="register-email" class="bg-amber-50 rounded-sm mb-2">
+
+        
+        <div id="buttons-modal" class="flex flex-row">
+          <button type="button" style="background: transparent;color: black;" id="submit" class="w-full mt-3 inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-green-200 inset-ring inset-ring-white/5 hover:bg-white/20 sm:mt-0 sm:w-auto" onclick="register()">submit</button>
+        <button type="button" command="close" commandfor="dialog" class="mt-3 inline-flex w-full justify-center rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-red-500 inset-ring inset-ring-white/5 hover:bg-white/20 sm:mt-0 sm:w-auto" onclick="document.getElementById('dialog-2').style.display='none'" >Cancel</button>
+        </div>
+        </div>
+        <div id="loading-space"></div>
+      </el-dialog-panel>
+    </div>
+  </dialog>
+</el-dialog>
+
+
+<!-- Include this script tag or install `@tailwindplus/elements` via npm: -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1" type="module"></script> -->
+<el-dialog>
+   <dialog id="dialog" aria-labelledby="dialog-title""> 
+    <!--class="fixed inset-0 size-auto overflow-y-auto bg-transparent backdrop:bg-transparent" -->
+    <div id="dialog-content" tabindex="0"">
+      <el-dialog-panel>
+        <div >
+          <div >
+            <div>
+
+            </div>
+            <div >
+              <h3 style="text-align:center;color: black; font-size: 30px;" id="dialog-title"><span style="font-family:Pacifico;color: darkblue;">L</span>ogin</h3> </div>
+        </div>
+        </div>
+        <div >
+        <div style="text-align: left;"><i class="fa-solid fa-envelope"></i>Email : </div>
+        <input placeholder="&nbsp;&nbsp;&nbsp;input your email" type="email" name="email" id="email" class="bg-amber-50 rounded-sm mb-2">
+        <br>
+        <div style="margin-top: 20px; text-align: left;"><i class="fa-solid fa-lock"></i>Password : </div>
+        <input placeholder="&nbsp;&nbsp;&nbsp;input your password" type="password" name="password" id="password" class="bg-amber-50 rounded-sm">
+        <div id="buttons-modal" class="flex flex-row">
+        <button type="button" style="background: transparent;color: black;" id="submit" class="w-full mt-3 inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-green-200 inset-ring inset-ring-white/5 hover:bg-white/20 sm:mt-0 sm:w-auto" onclick="checkinfo()">submit</button>
+        <button type="button" command="close" commandfor="dialog" class="mt-3 inline-flex w-full justify-center rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-red-500 inset-ring inset-ring-white/5 hover:bg-white/20 sm:mt-0 sm:w-auto">Cancel</button>
+        </div>
+        </div>
+        <div id="loading-space"></div>
+      </el-dialog-panel>
+    </div>
+  </dialog>
+</el-dialog>
+
+
+
+    <nav id="nav-bar" >
+       <h1 id="nav-title" class="honk-1 text-4xl mx-2 ">RozaPolt</h1>
+<h1 style="color: white;" id="menu-icon" onclick="document.getElementById('menu').style.display='flex'">
+      <i class="fa-solid fa-bars-staggered" ></i>
+</h1>\
+   <div id="menu" style="flex-direction: row; justify-content: center;">
+            <h1 ><i class="fa-solid fa-house"></i> home</h1>
+            <h1 ></i> about</h1>
+             <a href="" id="mp">myprofile</a>
+            <button id="register-button" onclick="show_register_modal()"><i class="fa-solid fa-right-to-bracket"></i> register </button>
+            <button id="log-in-button" command="show-modal" commandfor="dialog"  ><i class="fa-solid fa-address-book"></i>&nbsp; &nbsp;log in</button>
+           <a href="" id="profile-image-link">
+             <img id="profile-image" src="./images/none_image.png" alt="" width="40px" height="40" style="display: none;" class="rounded-2xl border-amber-50 border my-2"> 
+           </a>
+          <h1 id="profile" >profile</h1> 
+          <h1 id="log-out" onclick="log_out();location.reload()">log-out</h1>
+        </div> 
+    </nav>
+
+
+
+
+<div class="hero-section">
+  <h1><span>H</span>ello <span>F</span>riend </h1>
+  <h4 style="text-align: center;font-weight: 400;">
+    Welcome to RoszaPolt — your trusted space online,<br>
+    I’m truly happy to have you here.  
+  </h4>
+  <button><i class="fa-brands fa-searchengin"></i>&nbsp; explore</button>
+</div>
+<div class="grid-container">
+  <div class="card">
+    <div class="title">Programming</div>
+    <div class="icon"><i class="fa-thin fa-laptop-code"></i></div>
+    <div class="content">
+      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel, voluptatum. Magni hic, voluptate debitis esse corporis dolor laudantium quae quo!</p>
+    </div>
+  </div>
+  
+  <div class="card">
+    <div class="title">Security</div>
+    <div class="icon"><i class="fa-thin fa-shield-check"></i></div>
+    <div class="content">
+      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel, voluptatum. Magni hic, voluptate debitis esse corporis dolor laudantium quae quo!</p>
+    </div>
+  </div>
+  
+  <div class="card">
+    <div class="title">Maintenance</div>
+    <div class="icon"><i class="fa-thin fa-wrench-simple"></i></div>
+    <div class="content">
+      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Vel, voluptatum. Magni hic, voluptate debitis esse corporis dolor laudantium quae quo!</p>
+    </div>
+  </div>
+</div>
+
+<div class="hero-section" style="background:transparent;">
+  <h1><span>G</span>ood <span>D</span>ay&nbsp;&star;</h1>
+</div>
+     <div >
+      <div id="page-content" >
+      </div>
+     </div>
+<div id="add-post" onclick="show_add_post_modal()"><i class="fa-solid fa-plus"></i></div>
+
+
+<div class="loader" id="loader">
+  <div class="justify-content-center jimu-primary-loading" id="loader-content"></div>
+</div>
+
+</body>
+
+<style>
+
+
+
+@import url('https://pro.fontawesome.com/releases/v6.0.0-beta1/css/all.css');
+
+
+
+
+
+/*media query section ...*/
+
+
+#my_bad_alert,#my_good_alert{
+  bottom: 0;
+  left: 0;
+  position: fixed;
+  padding: 10px;
+  gap: 10px;
+  flex-direction: row;
+  align-items: center;
+  transition: all 0.5 ease;
+  width: auto;
+  padding-inline: 20px;
+ display: none;
+ margin: 5px;
+}
+
+
+.loader {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: none;
+  background-color: rgba(34, 0, 255, 0.021);
+  z-index: 9999999;
+}
+
+.jimu-primary-loading:before,
+.jimu-primary-loading:after {
+  position: absolute;
+  top: 0;
+  content: '';
+    z-index: 9999999;
+}
+
+.jimu-primary-loading:before {
+  left: -19.992px;
+}
+
+.jimu-primary-loading:after {
+  left: 19.992px;
+  -webkit-animation-delay: 0.32s !important;
+  animation-delay: 0.32s !important;
+}
+
+.jimu-primary-loading:before,
+.jimu-primary-loading:after,
+.jimu-primary-loading {
+  background: #076fe5;
+  -webkit-animation: loading-keys-app-loading 0.8s infinite ease-in-out;
+  animation: loading-keys-app-loading 0.8s infinite ease-in-out;
+  width: 13.6px;
+  height: 32px;
+}
+
+.jimu-primary-loading {
+  text-indent: -9999em;
+  margin: auto;
+  position: absolute;
+  right: calc(50% - 6.8px);
+  top: calc(50% - 16px);
+  -webkit-animation-delay: 0.16s !important;
+  animation-delay: 0.16s !important;
+}
+
+@-webkit-keyframes loading-keys-app-loading {
+
+  0%,
+  80%,
+  100% {
+    opacity: .75;
+    box-shadow: 0 0 #076fe5;
+    height: 32px;
+  }
+
+  40% {
+    opacity: 1;
+    box-shadow: 0 -8px #076fe5;
+    height: 40px;
+  }
+}
+
+@keyframes loading-keys-app-loading {
+
+  0%,
+  80%,
+  100% {
+    opacity: .75;
+    box-shadow: 0 0 #076fe5;
+    height: 32px;
+  }
+
+  40% {
+    opacity: 1;
+    box-shadow: 0 -8px #076fe5;
+    height: 40px;
+  }
+}
+
+#loading-space{
+  width: 60px;
+  height: 60px;
+  background-color: rgb(255, 255, 255);
+  align-self: center;
+  justify-self: center;
+}
+
+#menu{
+background-color: rgb(4, 0, 58);
+display: flex;
+flex-direction: row;
+position: fixed;
+/* height: 20px; */
+color:white;
+min-width: 200px;
+width: 40vw;
+padding: 6px;
+height:auto;
+gap: 10px;
+right: 0;
+flex-flow: wrap;
+/* border-top-left-radius:0px ;
+border-top-right-radius: 0px; */
+border-bottom: solid 4px rgb(255, 179, 0);
+z-index: 1000;
+&>h1{
+  border-bottom:solid 1px white;
+}
+}
+
+
+
+#profile,#log-out{
+  display: none;
+  font-weight: 800;
+  height: 25px;
+}
+
+
+#log-in{
+  background-color: greenyellow;
+}
+
+
+*{
+  box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+#dialog-title{
+  font-weight: 800;
+}
+
+#register-button,#log-in-button{
+  cursor: pointer;
+  &:hover{
+    background-color: darkblue;
+    border-radius: 5px;
+  }
+}
+
+.grid-container {
+  width: min(75rem, 100%);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+  gap: 2rem;
+  margin-block: 5%;
+}
+.card {
+  margin-bottom: 160px;
+  --grad: red, blue;
+  padding: 2.5rem;
+  background:white;
+  border-radius: 2rem;
+  gap: 1.5rem;
+  display: grid;
+  grid-template: 'title icon' 'content content' 'bar bar' / 1fr auto;
+  font-family: system-ui, sans-serif;
+  color: #444447;
+    box-shadow: 
+    inset -2px 2px hsl(0 0 100% / 1),
+    -20px 20px 40px hsla(0, 0%, 91%, 0.25) ;
+    margin-top:-160px;
+  
+  .title {
+    font-size: 1.5rem;
+    grid-area: title;
+    align-self: end;
+    text-transform: uppercase;
+    font-weight: 500;
+    word-break: break-all;
+    
+  }
+  .icon {
+    grid-area: icon;
+    font-size: 3rem;
+    
+    > i {
+      color: transparent;
+      background: linear-gradient(to right, var(--grad));
+      background-clip: text;
+    }
+  }
+  .content {
+    grid-area: content;
+    & > *:first-child { margin-top: 0rem}
+    & > *:last-child { margin-bottom: 0rem}
+  }
+  &::after {
+    content: "";
+    grid-area: bar;
+    height: 2px;
+    background-image: linear-gradient(90deg, var(--grad));
+/*     margin-inline: -1.5rem; */
+  }
+}
+#add-post{
+  background: linear-gradient(90deg,darkblue,black);
+  color: white;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  padding: 20px;
+  padding-top: 24px;
+  margin: 4px;
+  font-size: 20px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  display: none;
+  
+}
+
+
+#add-post:hover{
+    background: linear-gradient(180deg,black,darkblue);
+}
+
+
+#nav-title{
+  justify-self: left;
+  left: 0;
+align-self: flex-start;
+}
+
+  .hero-section{
+background:url('./images/background1.jpg');
+background-repeat: no-repeat;
+background-attachment: fixed;
+background-position: center;
+    width: 100%;
+    height: 800px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    user-select: none;
+    
+  }
+
+  .hero-section > h1{
+    position:absolute;
+    text-shadow:10px 4px 10px rgb(169, 169, 169);
+    font-size: 140px;
+    font-weight: 800;
+    align-self: center;
+    transition: all 0.3s ease;
+  }
+    .hero-section h4{
+    position:absolute;
+    font-size: 20px;
+    margin-top:180px;
+    color: rgba(124, 124, 124, 0.874);
+    align-self: center;
+    transition: all 0.3s ease;
+  }
+  .hero-section >h1 span{
+      font-family: "Pacifico", cursive;
+      font-weight: 400;
+      font-style: normal;
+      color: rgb(0, 0, 91);
+  }
+.hero-section button{
+ position:absolute;
+ align-self: center;
+ margin-top: 400px;
+ background:linear-gradient(90deg,darkblue,black);
+ border-radius: 40px;
+ box-shadow: 4px 4px 10px rgb(169, 169, 169);
+ padding-inline: 60px;
+ padding-block: 20px;
+ text-align: center;
+ color: white;
+ font-size: 24px;
+ padding-top: 30px;
+ transition: all 0.3s ease;
+
+}
+#page-content{
+  display: flex;
+  flex-flow: wrap;
+  background-attachment: fixed;
+  margin-block: 0;
+  flex-direction: column;
+align-items: center;
+}
+
+#cart{
+width: 100vw;
+margin: 40px;
+}
+#dialog{
+  width: 300px;
+  height: 330px;
+  border-radius: 20px;
+  box-shadow:1px 1px 10px 4px rgb(169, 169, 169);
+  z-index: 2000;
+  margin-block: 20px;
+  transition: all ease 0.3s;
+  overflow: hidden;
+  align-self: center;
+  justify-self: center;
+  font-size: 10px;
+  padding: 20px;
+  color: rgb(153, 153, 153);
+}
+#dialog input{
+  border: solid 1px rgb(219, 219, 219);
+  width: 100%;
+  height: 40px;
+  background-color: transparent;
+  font-size: 12px;
+  color: black;
+}
+#dialog button{
+ align-self: center;
+ border-radius: 10px;
+ box-shadow: 4px 4px 10px rgb(169, 169, 169);
+ text-align: center;
+ color: white;
+ width: 60px;
+ transition: all 0.3s ease;
+ margin: 10px;
+ padding-top: 7px;
+ background-color: black;
+ cursor: pointer;
+}
+#dialog-content{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: white;
+}
+
+
+
+
+
+#dialog-2{
+  width: 400px;
+  height: 500px;
+  border-radius: 20px;
+  box-shadow:1px 1px 10px 4px rgb(169, 169, 169);
+  z-index: 2000;
+  margin-block: 20px;
+  transition: all ease 0.3s;
+  margin-top: 90vh;
+  overflow: hidden;
+  align-self: center;
+  justify-self: center;
+  font-size: 10px;
+  padding: 20px;
+  color: rgb(153, 153, 153);
+  position: fixed;
+}
+#dialog-2 input{
+  border: solid 1px rgb(219, 219, 219);
+  width: 100%;
+  height: 40px;
+  background-color: transparent;
+  font-size: 12px;
+  color: black;
+}
+#dialog-2 button{
+ align-self: center;
+ border-radius: 10px;
+ box-shadow: 4px 4px 10px rgb(169, 169, 169);
+ text-align: center;
+ color: white;
+ width: 60px;
+ transition: all 0.3s ease;
+ margin: 10px;
+ padding-top: 7px;
+ background-color: black;
+ cursor: pointer;
+}
+#dialog-content{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: white;
+}
+
+
+
+
+
+
+#dialog-3{
+  width: 500px;
+  height: 600px;
+  border-radius: 20px;
+  box-shadow:1px 1px 10px 4px rgb(169, 169, 169);
+  z-index: 2000;
+  margin-block: 20px;
+  transition: all ease 0.3s;
+  margin-top: 95vh;
+  overflow: hidden;
+  align-self: center;
+  justify-self: center;
+  font-size: 10px;
+  padding: 20px;
+  color: rgb(153, 153, 153);
+  position: fixed;
+}
+#dialog-3 input{
+  border: solid 1px rgb(219, 219, 219);
+  width: 100%;
+  height: 40px;
+  background-color: transparent;
+  font-size: 12px;
+  color: black;
+}
+#dialog-3 button{
+ align-self: center;
+ border-radius: 10px;
+ box-shadow: 4px 4px 10px rgb(169, 169, 169);
+ text-align: center;
+ color: white;
+ width: 60px;
+ transition: all 0.3s ease;
+ margin: 10px;
+ padding-top: 7px;
+ background-color: black;
+ cursor: pointer;
+}
+#dialog-3 textarea{
+  border:dotted 2px black;
+  width: 100%;
+}
+/* #dialog-content{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: white;
+}
+ */
+
+
+
+#dialog-4{
+  width: 500px;
+  height: 600px;
+  border-radius: 20px;
+  box-shadow:1px 1px 10px 4px rgb(169, 169, 169);
+  z-index: 2000;
+  margin-block: 20px;
+  transition: all ease 0.3s;
+  margin-top: 95vh;
+  overflow: hidden;
+  align-self: center;
+  justify-self: center;
+  font-size: 10px;
+  padding: 20px;
+  color: rgb(153, 153, 153);
+  position: fixed;
+}
+#dialog-4 input{
+  border: solid 1px rgb(219, 219, 219);
+  width: 100%;
+  height: 40px;
+  background-color: transparent;
+  font-size: 12px;
+  color: black;
+}
+#dialog-4 button{
+ align-self: center;
+ border-radius: 10px;
+ box-shadow: 4px 4px 10px rgb(169, 169, 169);
+ text-align: center;
+ color: white;
+ width: 60px;
+ transition: all 0.3s ease;
+ margin: 10px;
+ padding-top: 7px;
+ background-color: black;
+ cursor: pointer;
+}
+#dialog-4 textarea{
+  border:dotted 2px black;
+  width: 100%;
+}
+
+
+
+
+#buttons-modal{
+  align-self: flex-end;
+   position: absolute;
+bottom: 0;
+right: 0;
+cursor: pointer;
+}
+body{
+  background-attachment: fixed;
+}
+nav{
+position: fixed;
+/* box-shadow:1px 1px 10px 4px rgb(169, 169, 169); */
+transition: all 0.1s ease;
+border-radius: 0;
+width: 100%;
+top: 0;
+margin-inline: 0;
+height: 40px;
+display: flex;
+flex-direction: row;
+z-index: 1000;
+/* background: linear-gradient(90deg,darkblue,black); */
+background-color: rgb(4, 0, 58);
+}
+
+
+  #menu-icon{
+    visibility: hidden;
+    right: 0;
+    margin-right: 0;
+  }
+
+/*phone*/
+@media screen and (max-width: 767px) {
+
+  .hero-section > h1{
+ font-size: 100px;
+  }
+  #menu-icon{
+    visibility: visible;
+    color: white;
+    justify-self:right;
+    right: 0;
+    margin-right: 0;
+    position: absolute;
+    font-size: 20px;
+    padding: 4px;
+    padding-top: 10px;
+    transition: all 0.3s ease;
+
+  }
+}
+@media screen and (min-width:100px){
+  .hero-section> h1{
+       font-size: 60px;
+  }
+.hero-section button{
+padding-inline: 40px;
+padding-block: 5px;
+padding-top: 15px;
+  }
+  
+}
+
+
+@media screen and (min-width:700px){
+  .hero-section> h1{
+       font-size: 70px;
+  }
+  
+}
+
+
+/*computer +*/
+@media screen and (min-width:840px) {
+
+    .hero-section > h1{
+ font-size: 100px;
+  }
+
+
+
+}
+
+</style>
+</html>
+
+
+
+<!--hi liza can chat gpt do this-->
